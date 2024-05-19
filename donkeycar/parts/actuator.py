@@ -7,6 +7,8 @@ are wrapped in a mixer class before being used in the drive loop.
 import time
 import donkeycar as dk
 from donkeycar.parts.ominibot_car_com import OminibotCar,threading,sys
+
+
 class ominibot:
     from donkeycar.parts.ominibot_car_com import OminibotCar,threading,sys
     from donkeycar.parts.web_controller.web import LocalWebController
@@ -14,9 +16,7 @@ class ominibot:
     _baud = 115200
     ominibot  = OminibotCar(_port,_baud)
     def __init__(self):
-      """
-      
-      """
+
       _port = "/dev/ominibot_car"
       _baud = 115200
       ominibot  = OminibotCar(_port,_baud)
@@ -35,31 +35,37 @@ class ominibot:
         
         
         a=50
-        limit_low=0.2
-        limit_high=0.4
-        
+        limit_low=0.25
+        limit_high=0.8
+        g=1
+        c=20
         if speed>0:
           if angle < limit_low and angle > -limit_low:
               ominibot.individual_wheel(V1=a,V3=a,V2=a,V4=a, debug=False)
                
-          elif angle > limit_low and angle < limit_high:
-              b=angle*(100-a)
-              ominibot.individual_wheel(V1=a,V3=a,V2=a+b,V4=a+b, debug=False)
               
-          elif angle > limit_high:
-               ominibot.individual_wheel(V1=-a,V3=-a,V2=a,V4=a, debug=False)  
+          elif angle > limit_low:
+              b=angle*(100-c)*g
+              if b > 100:
+                b=100-c
+              else:
+                pass
+              ominibot.individual_wheel(V1=c,V3=c,V2=c+b,V4=c+b, debug=False)  
                
-          elif angle < -limit_low and angle > -limit_high:  
-              b=angle*-1*(100-a)
-              ominibot.individual_wheel(V1=a+b,V3=a+b,V2=a,V4=a, debug=False)
               
-          elif angle < -limit_high:  
-              ominibot.individual_wheel(V1=a,V3=a,V2=-a,V4=-a, debug=False)  
+          elif angle < -limit_low:
+              b=angle*(100-c)*-g
+              if b > 100:
+                b=100-c
+              else:
+                pass
+              ominibot.individual_wheel(V1=c+b,V3=c+b,V2=c,V4=c, debug=False) 
               
         else:
             ominibot.individual_wheel(V1=0,V3=0,V2=0,V4=0, debug=False) 
         
         '''
+        mode1程度值 
         a=30
         if speed>0:
           if angle > 0:
@@ -74,6 +80,7 @@ class ominibot:
         
         '''
         '''
+        mode2固定值
         aaa=50
         sss=0.4
         if speed > 0 and angle<sss and angle>-sss:
@@ -86,6 +93,7 @@ class ominibot:
           ominibot.individual_wheel(V1=0,V3=0,V2=0,V4=0, debug=False)  
         '''
         '''
+        mode3 ROSKY原
         limit = 100
         length = 0.15
         gain = 1
@@ -113,12 +121,37 @@ class ominibot:
         
         # v1, v3 = v_right ; v2, v4 = v_left
         ominibot.individual_wheel(V1=v_right, V3=v_right, V2=v_left , V4=v_left, debug=False)
+        
         '''
-    
-                        
-
-
-
+        """
+        mode1+2
+        a=50
+        limit_low=0.1
+        limit_high=0.4
+        
+        if speed>0:
+          if angle < limit_low and angle > -limit_low:
+              ominibot.individual_wheel(V1=a,V3=a,V2=a,V4=a, debug=False)
+               
+          elif angle > limit_low and angle < limit_high:
+              ominibot.individual_wheel(V1=-a,V3=-a,V2=a,V4=a, debug=False)
+              
+          elif angle > limit_high:
+              c=20
+              b=angle*(100-c)
+              ominibot.individual_wheel(V1=c,V3=c,V2=c+b,V4=c+b, debug=False)  
+               
+          elif angle < -limit_low and angle > -limit_high:  
+              ominibot.individual_wheel(V1=a,V3=a,V2=-a,V4=-a, debug=False)
+              
+          elif angle < -limit_high:  
+              c=20
+              b=angle*(100-c)*-1
+              ominibot.individual_wheel(V1=c+b,V3=c+b,V2=c,V4=c, debug=False) 
+              
+        else:
+            ominibot.individual_wheel(V1=0,V3=0,V2=0,V4=0, debug=False)         
+        """  
 
     
 class PCA9685:

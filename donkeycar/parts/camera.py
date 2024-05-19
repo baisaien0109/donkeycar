@@ -155,8 +155,7 @@ class CSICamera(BaseCamera):
 
     def init_camera(self):
         import cv2
-        #print('====================================================================================================================================================================================')
-
+       
         # initialize the camera and stream
         self.camera = cv2.VideoCapture(
             self.gstreamer_pipeline(
@@ -176,8 +175,7 @@ class CSICamera(BaseCamera):
         cv2.waitKey(0)'''
         
     def update(self):
-        #print('2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222')
-        #self.init_camera()
+         #self.init_camera()
         while self.running:
             self.poll_camera()
 

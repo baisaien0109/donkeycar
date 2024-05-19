@@ -135,6 +135,49 @@ class Joystick(object):
 
         return button, button_state, axis, axis_val
 
+    def poll_2(self):
+        '''
+        query the state of the joystick, returns button which was pressed, if any,
+        and axis which was moved, if any. button_state will be None, 1, or 0 if no changes,
+        pressed, or released. axis_val will be a float from -1 to +1. button and axis will
+        be the string label determined by the axis map in init.
+        '''
+        button = '0'
+        button_state = 0
+        axis = '0'
+        axis_val = 0
+
+        if self.jsdev is None:
+            return button, button_state, axis, axis_val
+
+        # Main event loop
+        evbuf = self.jsdev.read(8)
+
+        if evbuf:
+            tval, value, typev, number = struct.unpack('IhBB', evbuf)
+
+            if typev & 0x80:
+                #ignore initialization event
+                return button, button_state, axis, axis_val
+
+            if typev & 0x01:
+                button = self.button_map[number]
+                #print(tval, value, typev, number, button, 'pressed')
+                if button:
+                    self.button_states[button] = value
+                    button_state = value
+                    logging.info("button: %s state: %d" % (button, value))
+
+            if typev & 0x02:
+                axis = self.axis_map[number]
+                if axis:
+                    fvalue = value / 32767.0
+                    self.axis_states[axis] = fvalue
+                    axis_val = fvalue
+                    logging.debug("axis: %s val: %f" % (axis, fvalue))
+
+        return button, button_state, axis, axis_val
+
 
 class PyGameJoystick(object):
     def __init__( self,
@@ -1523,7 +1566,6 @@ class JoyStickPub(object):
         self.socket = context.socket(zmq.PUB)
         self.socket.bind("tcp://*:%d" % port)
 
-
     def run(self):
         while True:
             button, button_state, axis, axis_val = self.js.poll()
@@ -1538,6 +1580,29 @@ class JoyStickPub(object):
                 self.socket.send_string( "%s %d %s %f" % message_data)
                 #print("SENT", message_data)
                 return message_data
+
+    def run_2(self):
+        button, button_state, axis, axis_val = self.js.poll_2()
+        print('end')
+        if axis is not None or button is not None:
+            if button is None:
+                button  = "0"
+                button_state = 0
+            if axis is None:
+                axis = "0"
+                axis_val = 0
+            message_data = (button, button_state, axis, axis_val)
+            self.socket.send_string( "%s %d %s %f" % message_data)
+            #print("SENT", message_data)
+            return message_data
+        message_data = ['0', 0, '0', 0]
+        return message_data
+
+    def poll(self):
+        ret = (self.button, self.button_state, self.axis, self.axis_val)
+        self.button = None
+        self.axis = None
+        return ret
 
 
 class JoyStickSub(object):
@@ -1575,6 +1640,7 @@ class JoyStickSub(object):
                 self.button = None
             if self.axis == "0":
                 self.axis = None
+
 
 
     def run_threaded(self):
